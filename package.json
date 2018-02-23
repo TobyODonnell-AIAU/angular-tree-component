@@ -63,6 +63,7 @@
     "@angular/core": ">=2.0.0"
   },
   "dependencies": {
+    "@angular-devkit/core": "^0.4.2",
     "lodash": "4.17.4",
     "mobx": ">=3",
     "mobx-angular": ">=1"

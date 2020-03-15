@@ -1,9 +1,18 @@
-import { NgModule }      from '@angular/core';
+import { ModuleWithProviders, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MobxAngularModule } from 'mobx-angular';
+import { TreeMobxAutorunDirective } from './mobx-angular/tree-mobx-autorun.directive';
 
-import { TREE_ACTIONS, IActionMapping, IActionHandler } from './models/tree-options.model';
-import { ITreeOptions, IAllowDropFn, IAllowDragFn, ITreeState } from './defs/api';
+import {
+  IActionHandler,
+  IActionMapping,
+  TREE_ACTIONS
+} from './models/tree-options.model';
+import {
+  IAllowDragFn,
+  IAllowDropFn,
+  ITreeOptions,
+  ITreeState
+} from './defs/api';
 import { KEYS } from './constants/keys';
 import { TreeModel } from './models/tree.model';
 import { TreeNode } from './models/tree-node.model';
@@ -41,7 +50,8 @@ import './polyfills';
     TreeViewportComponent,
     TreeNodeWrapperComponent,
     TreeNodeCheckboxComponent,
-    TreeAnimateOpenDirective
+    TreeAnimateOpenDirective,
+    TreeMobxAutorunDirective
   ],
   exports: [
     TreeComponent,
@@ -57,17 +67,20 @@ import './polyfills';
     TreeViewportComponent,
     TreeNodeWrapperComponent,
     TreeNodeCheckboxComponent,
-    TreeAnimateOpenDirective
+    TreeAnimateOpenDirective,
+    TreeMobxAutorunDirective
   ],
-  imports: [
-    CommonModule,
-    MobxAngularModule
-  ],
-  providers: [
-    TreeDraggedElement
-  ]
+  imports: [CommonModule],
+  providers: []
 })
-export class TreeModule {}
+export class TreeModule {
+  static forRoot(): ModuleWithProviders {
+    return {
+      ngModule: TreeModule,
+      providers: [TreeDraggedElement]
+    };
+  }
+}
 
 export {
   TreeModel,
@@ -82,8 +95,10 @@ export {
   IAllowDropFn,
   IAllowDragFn,
   LoadingComponent,
+  TreeAnimateOpenDirective,
   TreeComponent,
   TreeNodeComponent,
+  TreeNodeWrapperComponent,
   TreeNodeContent,
   TreeDropDirective,
   TreeDragDirective,

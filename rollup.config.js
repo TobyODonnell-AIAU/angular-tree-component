@@ -1,5 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import autoExternal from 'rollup-plugin-auto-external';
 import uglify from 'rollup-plugin-uglify';
 
 export default {
@@ -8,15 +9,13 @@ export default {
   plugins: [
     nodeResolve({ jsnext: true, main: true, module: true }),
     commonjs(),
+    autoExternal(),
     uglify()
   ],
   sourceMap: true,
   external: [
     '@angular/core',
-    '@angular/common',
-    'lodash',
-    'mobx', 
-    'mobx-angular'
+    '@angular/common'
   ],
   onwarn: function (warning) {
     const skip_codes = [

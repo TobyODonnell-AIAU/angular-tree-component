@@ -1,17 +1,21 @@
-import { Injectable, EventEmitter } from '@angular/core';
+import { Injectable, EventEmitter, OnDestroy } from '@angular/core';
 import { observable, computed, action, autorun } from 'mobx';
+import { Subscription } from 'rxjs';
 import { TreeNode } from './tree-node.model';
 import { TreeOptions } from './tree-options.model';
 import { TreeVirtualScroll } from './tree-virtual-scroll.model';
 import { ITreeModel, IDType, IDTypeDictionary } from '../defs/api';
 import { TREE_EVENTS } from '../constants/events';
 
-import * as _ from 'lodash';
-
-const { first, last, compact, find, includes, isString, isFunction } = _;
+import first from 'lodash/first';
+import last from 'lodash/last';
+import compact from 'lodash/compact';
+import find from 'lodash/find';
+import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
 
 @Injectable()
-export class TreeModel implements ITreeModel {
+export class TreeModel implements ITreeModel, OnDestroy {
   static focusedTree = null;
 
   options: TreeOptions = new TreeOptions();
@@ -29,6 +33,7 @@ export class TreeModel implements ITreeModel {
 
   private firstUpdate = true;
   private events: any;
+  private subscriptions: Subscription[] = [];
 
   // events
   fireEvent(event) {
@@ -38,7 +43,8 @@ export class TreeModel implements ITreeModel {
   }
 
   subscribe(eventName, fn) {
-    this.events[eventName].subscribe(fn);
+    const subscription = this.events[eventName].subscribe(fn);
+    this.subscriptions.push(subscription);
   }
 
 
@@ -100,6 +106,22 @@ export class TreeModel implements ITreeModel {
     return compact(nodes);
   }
 
+  @computed get hiddenNodes() {
+    const nodes = Object.keys(this.hiddenNodeIds)
+        .filter((id) => this.hiddenNodeIds[id])
+        .map((id) => this.getNodeById(id));
+
+    return compact(nodes);
+  }
+
+  @computed get selectedLeafNodes() {
+    const nodes = Object.keys(this.selectedLeafNodeIds)
+        .filter((id) => this.selectedLeafNodeIds[id])
+        .map((id) => this.getNodeById(id));
+
+    return compact(nodes);
+  }
+
   // locating nodes
   getNodeByPath(path: any[], startNode= null): TreeNode {
     if (!path) return null;
@@ -156,6 +178,23 @@ export class TreeModel implements ITreeModel {
     return this.selectedLeafNodeIds[node.id];
   }
 
+  ngOnDestroy() {
+    this.dispose();
+    this.unsubscribeAll();
+  }
+
+  dispose() {
+    // Dispose reactions of the replaced nodes
+    if (this.virtualRoot) {
+      this.virtualRoot.dispose();
+    }
+  }
+
+  unsubscribeAll() {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+    this.subscriptions = [];
+  }
+
   // actions
   @action setData({ nodes, options = null, events = null }: {nodes: any, options: any, events: any}) {
     if (options) {
@@ -178,6 +217,8 @@ export class TreeModel implements ITreeModel {
       virtual: true,
       [this.options.childrenField]: this.nodes
     };
+
+    this.dispose();
 
     this.virtualRoot = new TreeNode(virtualRootConfig, null, this, 0);
 
@@ -251,10 +292,12 @@ export class TreeModel implements ITreeModel {
     }
 
     if (value) {
-      node.focus();
+      node.focus(this.options.scrollOnActivate);
       this.fireEvent({ eventName: TREE_EVENTS.activate, node });
+      this.fireEvent({ eventName: TREE_EVENTS.nodeActivate, node }); // For IE11
     } else {
       this.fireEvent({ eventName: TREE_EVENTS.deactivate, node });
+      this.fireEvent({ eventName: TREE_EVENTS.nodeDeactivate, node }); // For IE11
     }
   }
 
@@ -338,7 +381,7 @@ export class TreeModel implements ITreeModel {
     const fromIndex = node.getIndexInParent();
     const fromParent = node.parent;
 
-    if (!this._canMoveNode(node, fromIndex , to)) return;
+    if (!this.canMoveNode(node, to, fromIndex)) return;
 
     const fromChildren = fromParent.getField('children');
 
@@ -360,13 +403,18 @@ export class TreeModel implements ITreeModel {
       to.parent.treeModel.update();
     }
 
-    this.fireEvent({ eventName: TREE_EVENTS.moveNode, node: originalNode, to: { parent: to.parent.data, index: toIndex } });
+    this.fireEvent({
+      eventName: TREE_EVENTS.moveNode,
+      node: originalNode,
+      to: { parent: to.parent.data, index: toIndex },
+      from: { parent: fromParent.data, index: fromIndex}
+    });
   }
 
   @action copyNode(node, to) {
     const fromIndex = node.getIndexInParent();
 
-    if (!this._canMoveNode(node, fromIndex , to)) return;
+    if (!this.canMoveNode(node, to, fromIndex)) return;
 
     // If node doesn't have children - create children array
     if (!to.parent.getField('children')) {
@@ -412,8 +460,9 @@ export class TreeModel implements ITreeModel {
     autorun(() => fn(this.getState()));
   }
 
-  // private methods
-  private _canMoveNode(node, fromIndex, to) {
+  canMoveNode(node, to, fromIndex = undefined) {
+    const fromNodeIndex = fromIndex || node.getIndexInParent();
+
     // same node:
     if (node.parent === to.parent && fromIndex === to.index) {
       return false;
@@ -422,7 +471,11 @@ export class TreeModel implements ITreeModel {
     return !to.parent.isDescendantOf(node);
   }
 
+  calculateExpandedNodes() {
+      this._calculateExpandedNodes();
+  }
 
+  // private methods
   private _filterNode(ids, node, filterFn, autoShow) {
     // if node passes function then it's visible
     let isVisible = filterFn(node);
@@ -464,6 +517,7 @@ export class TreeModel implements ITreeModel {
       .filter((activeNode) => activeNode !== node)
       .forEach((activeNode) => {
         this.fireEvent({ eventName: TREE_EVENTS.deactivate, node: activeNode });
+        this.fireEvent({ eventName: TREE_EVENTS.nodeDeactivate, node: activeNode }); // For IE11
       });
 
     if (value) {

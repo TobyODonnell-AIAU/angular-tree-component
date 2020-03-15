@@ -1,9 +1,6 @@
 import { Component } from '@angular/core';
 import { ITreeOptions, TreeNode} from 'angular-tree-component';
 
-
-let id = 10;
-
 @Component({
   selector: 'app-async',
   template: `
@@ -13,7 +10,8 @@ let id = 10;
 })
 export class AsyncTreeComponent {
   options: ITreeOptions = {
-    getChildren: this.getChildren.bind(this)
+    getChildren: this.getChildren.bind(this),
+    useCheckbox: true
   };
 
   nodes: any[] = [];

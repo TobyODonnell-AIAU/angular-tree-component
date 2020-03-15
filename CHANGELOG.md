@@ -1,3 +1,112 @@
+<a name="8.5.6"></a>
+# 8.5.6 (2020-14-02)
+* Fixed mobxAutorun to treeMobxAutorun
+
+<a name="8.5.5"></a>
+# 8.5.5 (2020-14-02)
+* Support Angular 9 by removing dependency to mobx-angular (copied code inside)
+
+<a name="8.5.4"></a>
+# 8.5.4 (2020-12-02)
+* Support Angular 9 by upgrading mobx-angular to 3.1.1
+
+<a name="8.5.2"></a>
+# 8.5.2 (2019-03-12)
+* Fixed computed value after updating model, because parent was null and we got a race-condition
+
+<a name="8.5.1"></a>
+# 8.5.1 (2019-07-11)
+* Changed options input to ITreeOptions
+
+<a name="8.5.0"></a>
+# 8.5.0 (2019-06-11)
+* Support IVY by removing transitive dependency on Renderer via mobx-angular
+
+<a name="8.4.1"></a>
+# 8.4.1 (2019-01-10)
+* Exporting TreeNodeWrapperComponent and TreeAnimateOpenDirective from main module
+* Added openCollective message post install
+
+<a name="8.4.0"></a>
+# 8.4.0 (2019-19-05)
+* Added 'from' node on moveNode event
+
+<a name="8.3.0"></a>
+# 8.3.0 (2019-22-02)
+* Extended selection-api for nodes
+* Setting option scrollOnActivate to true did not prevent scrolling when clicking a node
+
+<a name="8.2.1"></a>
+# 8.2.1 (2019-21-02)
+* Moved @types/lodash to devDeps
+
+<a name="8.2.0"></a>
+# 8.2.0 (2018-29-12)
+* Added allowDragoverStyling option
+
+<a name="8.1.0"></a>
+# 8.1.0 (2018-25-12)
+* Added public calculateExpandedNodes
+* Fixed loading async children in large tree
+
+<a name="8.0.5"></a>
+# 8.0.5 (2018-25-12)
+* Fixed non triState checkboxes to reflect expected behaviour
+
+<a name="8.0.4"></a>
+# 8.0.4 (2018-22-12)
+* Fixed non triState checkboxes
+* Fixed checkboxes example to switch expander and checkbox
+
+<a name="8.0.3"></a>
+# 8.0.3 (2018-20-12)
+* Fixed Warning on state bind
+
+<a name="8.0.2"></a>
+# 8.0.2 (2018-11-12)
+* Checkbox keep parent selection on async childs
+
+<a name="8.0.1"></a>
+# 8.0.1 (2018-04-12)
+* Unsubscribe to prevent memory leaks
+
+<a name="8.0.0"></a>
+# 8.0.0 (2018-04-08)
+* Breaking change - Upgrade to Angular6 and Renderer2
+* Breaking change - load TreeDraggedElement in forRoot to support lazy loading
+
+<a name="7.2.1"></a>
+# 7.2.1 (2018-21-06)
+* remove _canMoveNode validation from the copyNode function, fix #608 - PR #609
+* Add event parameter to onScroll, fix #534 #537 - PR #537
+* Optimize onChanges update, fix #534 #537 - PR #537
+* Fixed example with Angular6
+* Moved @lodash/types from devDependency to dependency
+
+<a name="7.2.0"></a>
+# 7.2.0 (2018-14-05)
+* Added nodeActivate and nodeDeactivate events for IE11 - issue #387
+* Added scrollContainer option to allow scrolling in external container - issue #92
+
+<a name="7.1.0"></a>
+# 7.1.0 (2018-24-03)
+* Breaking change - Renamed SELECT action to ACTIVATE
+* Breaking change - Renamed DESELECT action to DEACTIVATE
+* Added SELECT and DESLECT that do selection instead of activation
+* Breaking change - renamed scrollOnSelect to scrollOnActivate
+* Fixed setHiddenNodesIds with correct reduce order
+* Added useTriState to options to decide if using master checkboxes or not
+* Fixed memory leak - disposing of reactions
+* Added useTriState option
+* Fixed master checkbox to only select visible children
+* Improving scroll performance
+* Added mobile drag and drop polyfill
+
+<a name="7.0.2"></a>
+# 7.0.2 (2018-13-03)
+* Load specific lodash modules
+* Fix mobx and mobx-angular versions
+
 <a name="7.0.1"></a>
 # 7.0.1 (2017-15-12)
 * Fixed typescript 2.6.1 strict checking

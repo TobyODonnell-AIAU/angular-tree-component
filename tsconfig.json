@@ -4,6 +4,7 @@
     "moduleResolution": "node",
     "target": "es5",
     "outDir": "dist/",
+    "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "inlineSourceMap": true,
@@ -13,12 +14,11 @@
     "stripInternal": true,
     "lib": ["es2015", "dom"]
   },
-  "files": [
-    "lib/angular-tree-component"
-  ],
+  "files": ["lib/angular-tree-component"],
   "compileOnSave": false,
   "buildOnSave": false,
   "angularCompilerOptions": {
-    "skipTemplateCodegen": true
+    "skipTemplateCodegen": true,
+    "enableIvy": false
   }
 }

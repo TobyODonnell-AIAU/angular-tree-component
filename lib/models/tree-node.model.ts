@@ -1,29 +1,32 @@
-import { observable, computed, reaction, autorun, action } from 'mobx';
+import { observable, computed, reaction, autorun, action, IReactionDisposer } from 'mobx';
 import { TreeModel } from './tree.model';
 import { TreeOptions } from './tree-options.model';
 import { ITreeNode } from '../defs/api';
 import { TREE_EVENTS } from '../constants/events';
 
-import * as _ from 'lodash';
-const { first, last, some, every } = _;
+import first from 'lodash/first';
+import last from 'lodash/last';
+import some from 'lodash/some';
+import every from 'lodash/every';
 
 export class TreeNode implements ITreeNode {
+  private handler: IReactionDisposer;
   @computed get isHidden() { return this.treeModel.isHidden(this); };
   @computed get isExpanded() { return this.treeModel.isExpanded(this); };
   @computed get isActive() { return this.treeModel.isActive(this); };
   @computed get isFocused() { return this.treeModel.isNodeFocused(this); };
   @computed get isSelected() {
-    if (this.isLeaf) {
-      return this.treeModel.isSelected(this);
+    if (this.isSelectable()) {
+        return this.treeModel.isSelected(this);
     } else {
-      return some(this.children, (node) => node.isSelected);
+      return some(this.children, (node: TreeNode) => node.isSelected);
     }
   };
   @computed get isAllSelected() {
-    if (this.isLeaf) {
-      return this.isSelected;
+    if (this.isSelectable()) {
+      return this.treeModel.isSelected(this);
     } else {
-      return every(this.children, (node) => node.isAllSelected);
+      return every(this.children, (node: TreeNode) => node.isAllSelected);
     }
   };
   @computed get isPartiallySelected() {
@@ -187,6 +190,10 @@ export class TreeNode implements ITreeNode {
     return this.options.allowDrop(element, { parent: this, index: 0 }, $event);
   }
 
+  allowDragoverStyling = () => {
+    return this.options.allowDragoverStyling;
+  }
+
   allowDrag() {
     return this.options.allowDrag(this);
   }
@@ -202,6 +209,9 @@ export class TreeNode implements ITreeNode {
         if (children) {
           this.setField('children', children);
           this._initChildren();
+          if (this.options.useTriState && this.treeModel.isSelected(this)) {
+            this.setIsSelected(true);
+          }
           this.children.forEach((child) => {
             if (child.getField('isExpanded') && child.hasChildren) {
               child.expand();
@@ -271,31 +281,47 @@ export class TreeNode implements ITreeNode {
   };
 
   autoLoadChildren() {
-    reaction(
-      () => this.isExpanded,
-      (isExpanded) => {
-        if (!this.children && this.hasChildren && isExpanded) {
-          this.loadNodeChildren();
-        }
-      },
-      { fireImmediately: true }
-    );
+    this.handler =
+      reaction(
+        () => this.isExpanded,
+        (isExpanded) => {
+          if (!this.children && this.hasChildren && isExpanded) {
+            this.loadNodeChildren();
+          }
+        },
+        { fireImmediately: true }
+      );
+  }
+
+  dispose() {
+    if (this.children) {
+      this.children.forEach((child) => child.dispose());
+    }
+    if (this.handler) {
+      this.handler();
+    }
+    this.parent = null;
+    this.children = null;
   }
 
   setIsActive(value, multi = false) {
     this.treeModel.setActiveNode(this, value, multi);
     if (value) {
-      this.focus(this.options.scrollOnSelect);
+      this.focus(this.options.scrollOnActivate);
     }
 
     return this;
   }
 
-  setIsSelected(value) {
-    if (this.isLeaf) {
+  isSelectable() {
+    return this.isLeaf || !this.children || !this.options.useTriState;
+  }
+
+  @action setIsSelected(value) {
+    if (this.isSelectable()) {
       this.treeModel.setSelectedNode(this, value);
     } else {
-      this.children.forEach((child) => child.setIsSelected(value));
+      this.visibleChildren.forEach((child) => child.setIsSelected(value));
     }
 
     return this;
